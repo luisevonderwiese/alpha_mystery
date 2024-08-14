@@ -31,7 +31,6 @@ prefixes = ["", "noinvchar_", "noinvsite_"]
 large_datasets =  ["abvdoceanic", "bowernpny", "iecor"]
 datasets = os.listdir("data/msa")
 datasets = [d for d in datasets if d not in large_datasets]
-datasets = datasets[:1]
 
 for dataset in datasets:
     for prefix in prefixes:
