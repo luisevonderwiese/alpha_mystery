@@ -1,29 +1,7 @@
 import os
-from ete3 import Tree
-
-exe_path = ""
-
 
 def best_tree_path(prefix):
     return prefix + ".raxml.bestTree"
-
-def ml_trees_path(prefix):
-    return prefix + ".raxml.mlTrees"
-
-def siterate_lhs_path(prefix):
-    return prefix + ".raxml.siterateLH"
-
-def siterate_lhs(prefix):
-    path = siterate_lhs_path(prefix)
-    if not os.path.isfile(path):
-        return []
-    with open(path, "r") as f:
-        lines = f.readlines()
-    siteratelhs = []
-    for line in lines:
-        siteratelhs.append([float(el) for el in line.split(" ")[:-1]])
-    return siteratelhs
-
 
 
 def alpha(prefix):
@@ -86,9 +64,6 @@ def aic(prefix):
 
 
 def run_inference(msa_path, model, prefix, args = ""):
-    if exe_path == "":
-        print("Please specify raxmlng.exe_path")
-        return
     if not os.path.isfile(msa_path):
         print("MSA " + msa_path + " does not exist")
         return
@@ -97,7 +72,7 @@ def run_inference(msa_path, model, prefix, args = ""):
         os.makedirs(prefix_dir)
     if not os.path.isfile(best_tree_path(prefix)):
         args = args + " --redo"
-    command = exe_path
+    command = "./bin/raxml-ng"
     command += " --msa " + msa_path
     command += " --model " + model
     command += " --prefix " + prefix
