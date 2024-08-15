@@ -8,7 +8,6 @@ import util
 import rates
 import raxmlng
 
-raxmlng.exe_path = "./bin/raxml-ng"
 
 def scatterplot(dfs, prefix_a, column_a, prefix_b, column_b):
     data_a = dfs[prefix_a][column_a]
