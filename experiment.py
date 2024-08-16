@@ -56,7 +56,10 @@ for prefix in prefixes:
 
         df.at[i, "inv_sites_estimate"] = raxmlng.inv_estimate(os.path.join(results_dir, dataset, prefix + "BIN+FO+I")) * 100
         df.at[i, "zero_freq_estimate"] = raxmlng.zero_freq_estimate(os.path.join(results_dir, dataset, prefix + "BIN+G"))
-        df.at[i, "free_rates_var"] = rates.var(rates.parse_rates(raxmlng.free_rates(os.path.join(results_dir, dataset, prefix + "BIN+R4"))))
+        var = rates.var(rates.parse_rates(raxmlng.free_rates(os.path.join(results_dir, dataset, prefix + "BIN+R4"))))
+        if var > 10:
+            var = float("nan")
+        df.at[i, "free_rates_var"] = var
         for model in gamma_models:
             if model.startswith("prob_") and prefix != "":
                 continue
