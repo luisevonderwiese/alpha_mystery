@@ -49,7 +49,10 @@ for prefix in prefixes:
         df.at[i, "zero_freq_emp"] = util.zero_freq(align)
 
         df.at[i, "raxml_inv_sites_estimate"] = raxmlng.inv_estimate(os.path.join(raxml_results_dir, dataset, prefix + "BIN+FO+I")) * 100
-        df.at[i, "raxml_free_rates_var"] = rates.var(rates.parse_rates(raxmlng.free_rates(os.path.join(raxml_results_dir, dataset, prefix + "BIN+R4"))))
+        var = rates.var(rates.parse_rates(raxmlng.free_rates(os.path.join(raxml_results_dir, dataset, prefix + "BIN+R4"))))
+        if var > 10:
+            var = float("nan")
+        df.at[i, "raxml_free_rates_var"] = var
         df.at[i, "iqtree_inv_sites_estimate"] = iqtree.inv_estimate(os.path.join(iqtree_results_dir, dataset, prefix + "GTR2+I")) * 100
         df.at[i, "iqtree_free_rates_var"] = rates.var(rates.parse_rates(iqtree.free_rates(os.path.join(iqtree_results_dir, dataset, prefix + "GTR2+R4"))))
         for model in raxml_gamma_models:
@@ -59,7 +62,7 @@ for prefix in prefixes:
             df.at[i, "raxml_alpha_" + model] = raxmlng.alpha(raxml_prefix)
         for model in iqtree_gamma_models:
             iqtree_prefix = os.path.join(iqtree_results_dir, dataset, prefix + model)
-            df.at[i, "iqtree_alpha_" + model] = iqtree.alpha(iqtree_prefix)
+            df.at[i, "iqtree_alpha_" + model] = min(iqtree.alpha(iqtree_prefix), 100)
     dfs[prefix] = df
 
 if not os.path.isdir(os.path.join("results", "tool_comparison")):
