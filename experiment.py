@@ -39,7 +39,7 @@ for dataset in datasets:
     raxmlng.run_inference(os.path.join("data/msa/", dataset, "bin.catg"), "BIN+G", os.path.join(results_dir, dataset, "prob_BIN+G"), "--prob-msa on")
     raxmlng.run_inference(os.path.join("data/msa/", dataset, "multi.catg"), "MULTI" + str(x_values[dataset]) + "_MK+G", os.path.join(results_dir, dataset, "prob_MULTIxMK+G"), "--prob-msa on")
 
-columns = ["dataset", "num_taxa", "num_sites", "entropy_var", "inv_sites_emp", "zero_freq_emp", "inv_sites_estimate", "free_rates_var"]
+columns = ["dataset", "num_taxa", "num_sites", "entropy_var", "inv_sites_emp", "zero_freq_emp", "inv_sites_estimate", "zero_freq_estimate", "free_rates_var"]
 columns += ["alpha_" + model for model in gamma_models]
 dfs = {}
 for prefix in prefixes:
@@ -55,6 +55,7 @@ for prefix in prefixes:
         df.at[i, "zero_freq_emp"] = util.zero_freq(align)
 
         df.at[i, "inv_sites_estimate"] = raxmlng.inv_estimate(os.path.join(results_dir, dataset, prefix + "BIN+FO+I")) * 100
+        df.at[i, "zero_freq_estimate"] = raxmlng.zero_freq_estimate(os.path.join(results_dir, dataset, prefix + "BIN+G"))
         df.at[i, "free_rates_var"] = rates.var(rates.parse_rates(raxmlng.free_rates(os.path.join(results_dir, dataset, prefix + "BIN+R4"))))
         for model in gamma_models:
             if model.startswith("prob_") and prefix != "":
@@ -78,5 +79,14 @@ scatterplot(dfs, "", "alpha_BIN+G", "", "zero_freq_emp")
 scatterplot(dfs, "", "alpha_BIN+G", "", "inv_sites_estimate")
 scatterplot(dfs, "", "alpha_BIN+G", "", "free_rates_var")
 
+scatterplot(dfs, "", "zero_freq_emp", "", "zero_freq_estimate")
+scatterplot(dfs, "", "alpha_BIN+FE+G", "", "zero_freq_emp")
+scatterplot(dfs, "", "alpha_BIN+G", "", "zero_freq_estimate")
+scatterplot(dfs, "", "alpha_BIN+FE+G", "", "inv_sites_emp")
+
+
 scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "entropy_var")
+scatterplot(dfs, "noinvsite_", "alpha_BIN+FE+G", "noinvsite_", "zero_freq_emp")
+scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "zero_freq_estimate")
+scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "zero_freq_emp")
 scatterplot(dfs, "", "alpha_BIN+G", "noinvsite_", "alpha_BIN+G")

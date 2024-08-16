@@ -35,6 +35,15 @@ def final_llh(prefix):
     return float('nan')
 
 
+def zero_freq_estimate(prefix):
+    if not os.path.isfile(prefix + ".raxml.log"):
+        return float("nan")
+    with open(prefix + ".raxml.log", "r") as logfile:
+        lines = logfile.readlines()
+    for line in lines:
+        if line.startswith("   Base frequencies (ML)"):
+            return float(line.split(": ")[1].split(" ")[0])
+    return float('nan')
 
 
 def free_rates(prefix):
