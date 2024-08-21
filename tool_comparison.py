@@ -32,7 +32,7 @@ large_datasets =  ["abvdoceanic", "bowernpny", "iecor"]
 datasets = os.listdir("data/msa")
 datasets = [d for d in datasets if d not in large_datasets]
 
-columns = ["dataset", "num_taxa", "num_sites", "entropy_var", "inv_sites_emp", "zero_freq_emp", "raxml_inv_sites_estimate", "raxml_free_rates_var", "iqtree_inv_sites_estimate", "iqtree_free_rates_var"]
+columns = ["dataset", "num_taxa", "num_sites", "entropy_var", "inv_sites_emp", "zero_freq_emp", "raxml_inv_sites_estimate", "raxml_free_rates_var", "raxml_free_rates_llh", "iqtree_inv_sites_estimate", "iqtree_free_rates_var", "iqtree_free_rates_llh"]
 columns += ["raxml_alpha_" + model for model in raxml_gamma_models]
 columns += ["iqtree_alpha_" + model for model in iqtree_gamma_models]
 dfs = {}
@@ -53,8 +53,10 @@ for prefix in prefixes:
         if var > 10:
             var = float("nan")
         df.at[i, "raxml_free_rates_var"] = var
+        df.at[i, "raxml_free_rates_llh"] = raxmlng.final_llh(os.path.join(raxml_results_dir, dataset, prefix + "BIN+R4"))
         df.at[i, "iqtree_inv_sites_estimate"] = iqtree.inv_estimate(os.path.join(iqtree_results_dir, dataset, prefix + "GTR2+I")) * 100
         df.at[i, "iqtree_free_rates_var"] = rates.var(rates.parse_rates(iqtree.free_rates(os.path.join(iqtree_results_dir, dataset, prefix + "GTR2+R4"))))
+        df.at[i, "iqtree_free_rates_llh"] = iqtree.final_llh(os.path.join(iqtree_results_dir, dataset, prefix + "GTR2+R4")))
         for model in raxml_gamma_models:
             if model.startswith("prob_") and prefix != "":
                 continue
@@ -71,3 +73,4 @@ scatterplot(dfs, "", "raxml_alpha_BIN+G", "", "iqtree_alpha_GTR2+G")
 scatterplot(dfs, "", "raxml_alpha_BIN+FE+G", "", "iqtree_alpha_JC2+G")
 scatterplot(dfs, "", "raxml_inv_sites_estimate", "", "iqtree_inv_sites_estimate")
 scatterplot(dfs, "", "raxml_free_rates_var", "", "iqtree_free_rates_var")
+scatterplot(dfs, "", "raxml_free_rates_llh", "", "iqtree_free_rates_llh")
