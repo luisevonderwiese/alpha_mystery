@@ -56,7 +56,7 @@ for prefix in prefixes:
         df.at[i, "raxml_free_rates_llh"] = raxmlng.final_llh(os.path.join(raxml_results_dir, dataset, prefix + "BIN+R4"))
         df.at[i, "iqtree_inv_sites_estimate"] = iqtree.inv_estimate(os.path.join(iqtree_results_dir, dataset, prefix + "GTR2+I")) * 100
         df.at[i, "iqtree_free_rates_var"] = rates.var(rates.parse_rates(iqtree.free_rates(os.path.join(iqtree_results_dir, dataset, prefix + "GTR2+R4"))))
-        df.at[i, "iqtree_free_rates_llh"] = iqtree.final_llh(os.path.join(iqtree_results_dir, dataset, prefix + "GTR2+R4")))
+        df.at[i, "iqtree_free_rates_llh"] = iqtree.final_llh(os.path.join(iqtree_results_dir, dataset, prefix + "GTR2+R4"))
         for model in raxml_gamma_models:
             if model.startswith("prob_") and prefix != "":
                 continue
