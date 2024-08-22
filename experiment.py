@@ -99,3 +99,15 @@ scatterplot(dfs, "", "zero_freq_emp", "equalfreq_", "zero_freq_emp")
 scatterplot(dfs, "", "zero_freq_estimate", "equalfreq_", "zero_freq_estimate")
 scatterplot(dfs, "", "inv_sites_emp", "equalfreq_", "inv_sites_emp")
 scatterplot(dfs, "", "inv_sites_estimate", "equalfreq_", "inv_sites_estimate")
+
+
+alphas_normal = dfs[""]["alpha_BIN+G"]
+alphas_equalfreq = dfs["equalfreq_"]["alpha_BIN+G"]
+zero_freqs_normal = dfs[""]["zero_freq_emp"]
+zero_freqs_equalfreq = dfs["equalfreq_"]["zero_freq_emp"]
+datasets = dfs[""]["dataset"]
+result = []
+for i in range(len(datasets)):
+    result.append([datasets[i], alphas_normal[i], alphas_equalfreq[i], zero_freqs_normal[i], zero_freqs_equalfreq[i]])
+print(tabulate(result, tablefmt="pipe", headers = ["dataset", "alpha_normal", "alpha_equalfreq", "zero_freq_normal", "zero_frequ_equalfreq"]))
+
