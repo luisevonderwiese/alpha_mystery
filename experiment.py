@@ -26,7 +26,7 @@ with open('data/MULTI_X.txt') as f:
 
 bin_models = ["BIN+G", "BIN+FE+G", "BIN+FC+G", "BIN+R4", "BIN+FO+I"]
 gamma_models = ["BIN+G", "BIN+FE+G", "BIN+FC+G", "prob_MULTIxMK+G", "prob_BIN+G"]
-prefixes = ["", "noinvchar_", "noinvsite_"]
+prefixes = ["", "noinvchar_", "noinvsite_", "equalfreq_"]
 large_datasets =  ["abvdoceanic", "bowernpny", "iecor"]
 datasets = os.listdir("data/msa")
 datasets = [d for d in datasets if d not in large_datasets]
@@ -93,3 +93,9 @@ scatterplot(dfs, "noinvsite_", "alpha_BIN+FE+G", "noinvsite_", "zero_freq_emp")
 scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "zero_freq_estimate")
 scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "zero_freq_emp")
 scatterplot(dfs, "", "alpha_BIN+G", "noinvsite_", "alpha_BIN+G")
+
+scatterplot(dfs, "", "alpha_BIN+G", "equalfreq_", "alpha_BIN+G")
+scatterplot(dfs, "", "zero_freq_emp", "equalfreq_", "zero_freq_emp")
+scatterplot(dfs, "", "zero_freq_estimate", "equalfreq_", "zero_freq_estimate")
+scatterplot(dfs, "", "inv_sites_emp", "equalfreq_", "inv_sites_emp")
+scatterplot(dfs, "", "inv_sites_estimate", "equalfreq_", "inv_sites_estimate")

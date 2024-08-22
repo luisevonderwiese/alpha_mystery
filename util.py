@@ -93,3 +93,13 @@ def zero_freq(align):
         ones += site.count("1")
         zeros += site.count("0")
     return zeros / (ones + zeros)
+
+
+def required_one_sites(align):
+    ones = 0
+    zeros = 0
+    for site_index in range(align.get_alignment_length()):
+        site = align[:, site_index]
+        ones += site.count("1")
+        zeros += site.count("0")
+    return max(0, math.floor((zeros - ones) / len(align)))
