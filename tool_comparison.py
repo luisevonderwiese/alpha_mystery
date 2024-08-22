@@ -74,3 +74,7 @@ scatterplot(dfs, "", "raxml_alpha_BIN+FE+G", "", "iqtree_alpha_JC2+G")
 scatterplot(dfs, "", "raxml_inv_sites_estimate", "", "iqtree_inv_sites_estimate")
 scatterplot(dfs, "", "raxml_free_rates_var", "", "iqtree_free_rates_var")
 scatterplot(dfs, "", "raxml_free_rates_llh", "", "iqtree_free_rates_llh")
+
+
+pd.set_option('display.max_rows', dfs[""].shape[0]+1)
+print(dfs[""][["dataset", "raxml_free_rates_llh", "iqtree_free_rates_llh"]])
