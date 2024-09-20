@@ -89,6 +89,7 @@ scatterplot(dfs, "", "alpha_BIN+FE+G", "", "inv_sites_emp")
 
 
 scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "entropy_var")
+scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "num_sites")
 scatterplot(dfs, "noinvsite_", "alpha_BIN+FE+G", "noinvsite_", "zero_freq_emp")
 scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "zero_freq_estimate")
 scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "zero_freq_emp")
