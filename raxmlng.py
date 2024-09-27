@@ -1,8 +1,15 @@
 import os
+from ete3 import Tree
 
 def best_tree_path(prefix):
     return prefix + ".raxml.bestTree"
 
+def brlensum(prefix):
+    tree_path = best_tree_path(prefix)
+    if not os.path.isfile(tree_path):
+        return float("nan")
+    tree = Tree(tree_path)
+    return sum([node.dist for node in tree.traverse("postorder")])
 
 def alpha(prefix):
     if not os.path.isfile(prefix + ".raxml.log"):

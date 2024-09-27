@@ -39,7 +39,7 @@ for dataset in datasets:
     raxmlng.run_inference(os.path.join("data/msa/", dataset, "bin.catg"), "BIN+G", os.path.join(results_dir, dataset, "prob_BIN+G"), "--prob-msa on")
     raxmlng.run_inference(os.path.join("data/msa/", dataset, "multi.catg"), "MULTI" + str(x_values[dataset]) + "_MK+G", os.path.join(results_dir, dataset, "prob_MULTIxMK+G"), "--prob-msa on")
 
-columns = ["dataset", "num_taxa", "num_sites", "entropy_var", "inv_sites_emp", "zero_freq_emp", "inv_sites_estimate", "zero_freq_estimate", "free_rates_var"]
+columns = ["dataset", "num_taxa", "num_sites", "area", "entropy_var", "inv_sites_emp", "zero_freq_emp", "inv_sites_estimate", "zero_freq_estimate", "free_rates_var", "brlensum"]
 columns += ["alpha_" + model for model in gamma_models]
 dfs = {}
 for prefix in prefixes:
@@ -50,6 +50,7 @@ for prefix in prefixes:
         align = util.save_msa_read(msa_path)
         df.at[i, "num_taxa"] = util.num_taxa(align)
         df.at[i, "num_sites"] = util.num_sites(align)
+        df.at[i, "area"] = util.num_sites(align) * util.num_taxa(align)
         df.at[i, "entropy_var"] = util.entropy_var(align)
         df.at[i, "inv_sites_emp"] = util.inv_sites(align)
         df.at[i, "zero_freq_emp"] = util.zero_freq(align)
@@ -60,6 +61,7 @@ for prefix in prefixes:
         if var > 10:
             var = float("nan")
         df.at[i, "free_rates_var"] = var
+        df.at[i, "brlensum"] = raxmlng.brlensum(os.path.join(results_dir, dataset, prefix + "BIN+G"))
         for model in gamma_models:
             if model.startswith("prob_") and prefix != "":
                 continue
@@ -81,6 +83,9 @@ scatterplot(dfs, "", "alpha_BIN+G", "", "inv_sites_emp")
 scatterplot(dfs, "", "alpha_BIN+G", "", "zero_freq_emp")
 scatterplot(dfs, "", "alpha_BIN+G", "", "inv_sites_estimate")
 scatterplot(dfs, "", "alpha_BIN+G", "", "free_rates_var")
+scatterplot(dfs, "", "alpha_BIN+G", "", "brlensum")
+scatterplot(dfs, "", "alpha_BIN+G", "", "area")
+
 
 scatterplot(dfs, "", "zero_freq_emp", "", "zero_freq_estimate")
 scatterplot(dfs, "", "alpha_BIN+FE+G", "", "zero_freq_emp")
@@ -90,6 +95,7 @@ scatterplot(dfs, "", "alpha_BIN+FE+G", "", "inv_sites_emp")
 
 scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "entropy_var")
 scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "num_sites")
+scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "area")
 scatterplot(dfs, "noinvsite_", "alpha_BIN+FE+G", "noinvsite_", "zero_freq_emp")
 scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "zero_freq_estimate")
 scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "zero_freq_emp")
