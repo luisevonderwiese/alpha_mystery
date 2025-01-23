@@ -3,6 +3,9 @@ from tabulate import tabulate
 import json
 import pandas as pd
 import matplotlib.pyplot as plt
+from sklearn.metrics import roc_auc_score
+from scipy.stats import somersd, rankdata
+
 
 import util
 import rates
@@ -20,6 +23,57 @@ def scatterplot(dfs, prefix_a, column_a, prefix_b, column_b):
     plt.clf()
     plt.close()
 
+def to_binary(alpha_values):
+    threshold = 90
+    binary = []
+    for alpha in alpha_values:
+        if alpha > threshold:
+            binary.append(1)
+        else:
+            binary.append(0)
+    return binary
+
+def get_auc_score(dfs, prefix_a, column_a, prefix_b, column_b):
+    data_a = dfs[prefix_a][column_a]
+    data_b = dfs[prefix_b][column_b]
+    binary = to_binary(data_a)
+    data_b_filtered = []
+    binary_filtered = []
+    for i, value in enumerate(data_b):
+        if value == value:
+            data_b_filtered.append(value)
+            binary_filtered.append(binary[i])
+    return roc_auc_score(binary_filtered, data_b_filtered)
+
+def get_somersd(dfs, prefix_a, column_a, prefix_b, column_b):
+    data_a = dfs[prefix_a][column_a]
+    data_b = dfs[prefix_b][column_b]
+    binary = to_binary(data_a)
+    data_b_filtered = []
+    binary_filtered = []
+    for i, value in enumerate(data_b):
+        if value == value:
+            data_b_filtered.append(value)
+            binary_filtered.append(binary[i])
+
+    ranks = rankdata(data_b_filtered, method = "dense")
+    s = somersd(ranks, binary_filtered)
+    return (s.statistic, s.pvalue)
+
+def statistical_analysis(prefix, alpha_column, other_columns):
+    print(prefix, alpha_column)
+    res = []
+    for column in other_columns:
+        r = [column]
+        r.append(get_auc_score(dfs, prefix, alpha_column, prefix, column))
+        d = get_somersd(dfs, prefix, alpha_column, prefix, column)
+        r.append(d[0])
+        r.append(d[1])
+        res.append(r)
+    headers = ["column", "AUC", "Somers' D", "Somers' D - pvalue"]
+    print(tabulate(res, tablefmt="pipe", headers=headers))
+
+
 results_dir = os.path.join("results", "raxml")
 with open('data/MULTI_X.txt') as f:
     x_values = json.loads(f.read())
@@ -34,10 +88,10 @@ datasets = [d for d in datasets if d not in large_datasets]
 for dataset in datasets:
     for prefix in prefixes:
         msa_path = os.path.join("data/msa/", dataset, prefix + "bin.phy")
-        for model in bin_models:
-            raxmlng.run_inference(msa_path, model, os.path.join(results_dir, dataset, prefix + model))
-    raxmlng.run_inference(os.path.join("data/msa/", dataset, "bin.catg"), "BIN+G", os.path.join(results_dir, dataset, "prob_BIN+G"), "--prob-msa on")
-    raxmlng.run_inference(os.path.join("data/msa/", dataset, "multi.catg"), "MULTI" + str(x_values[dataset]) + "_MK+G", os.path.join(results_dir, dataset, "prob_MULTIxMK+G"), "--prob-msa on")
+        #for model in bin_models:
+            #raxmlng.run_inference(msa_path, model, os.path.join(results_dir, dataset, prefix + model))
+    #raxmlng.run_inference(os.path.join("data/msa/", dataset, "bin.catg"), "BIN+G", os.path.join(results_dir, dataset, "prob_BIN+G"), "--prob-msa on")
+    #raxmlng.run_inference(os.path.join("data/msa/", dataset, "multi.catg"), "MULTI" + str(x_values[dataset]) + "_MK+G", os.path.join(results_dir, dataset, "prob_MULTIxMK+G"), "--prob-msa on")
 
 columns = ["dataset", "num_taxa", "num_sites", "area", "entropy_var", "inv_sites_emp", "zero_freq_emp", "inv_sites_estimate", "zero_freq_estimate", "free_rates_var", "brlensum"]
 columns += ["alpha_" + model for model in gamma_models]
@@ -106,6 +160,11 @@ scatterplot(dfs, "", "zero_freq_emp", "equalfreq_", "zero_freq_emp")
 scatterplot(dfs, "", "zero_freq_estimate", "equalfreq_", "zero_freq_estimate")
 scatterplot(dfs, "", "inv_sites_emp", "equalfreq_", "inv_sites_emp")
 scatterplot(dfs, "", "inv_sites_estimate", "equalfreq_", "inv_sites_estimate")
+
+statistical_analysis("", "alpha_BIN+G",
+        ["num_taxa", "num_sites", "entropy_var", "inv_sites_emp", "zero_freq_emp", "inv_sites_estimate", "free_rates_var", "brlensum", "area"])
+
+
 
 
 alphas_normal = dfs[""]["alpha_BIN+G"]
