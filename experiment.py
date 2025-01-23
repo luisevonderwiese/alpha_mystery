@@ -56,8 +56,7 @@ def get_somersd(dfs, prefix_a, column_a, prefix_b, column_b):
             data_b_filtered.append(value)
             binary_filtered.append(binary[i])
 
-    ranks = rankdata(data_b_filtered, method = "dense")
-    s = somersd(ranks, binary_filtered)
+    s = somersd(binary_filtered, data_b_filtered)
     return (s.statistic, s.pvalue)
 
 def statistical_analysis(prefix, alpha_column, other_columns):
