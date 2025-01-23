@@ -91,9 +91,6 @@ def run_inference(msa_path, model, prefix, args = ""):
 
 
 def run_inference_adaptive(msa_path, model, prefix, args = ""):
-    if adaptive_exe_path == "":
-        print("Please specify raxmlng.exe_path")
-        return
     if not os.path.isfile(msa_path):
         print("MSA " + msa_path + " does not exist")
         return

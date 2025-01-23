@@ -18,17 +18,17 @@ datasets = [d for d in datasets if d not in large_datasets]
 
 
 for i, dataset in enumerate(datasets):
-    msa_path = os.path.join("data/msa/", dataset, prefix + "bin.phy")
-    prefix = os.path.join(results_dir, dataset, model)
-    raxmlng.run_inference_adaptive(msa_path, "BIN+G", prefix)
+    msa_path = os.path.join("data/msa/", dataset, "bin.phy")
+    prefix = os.path.join(results_dir, dataset, "BIN+G")
+    #raxmlng.run_inference_adaptive(msa_path, "BIN+G", prefix)
     srlhs = raxmlng.siterate_lhs(prefix)
-    lines = [[srlhs[s][r] for s in range(len(srlhs[0]))] for r in range(4)]
+    lines = [[srlhs[s][r] for s in range(len(srlhs))] for r in range(4)]
 
     for line in lines:
         plt.plot(line)
     plt.xlabel("sites")
     plt.ylabel("llh")
-    name = "dataset.png"
+    name = dataset + ".png"
     plt.savefig(os.path.join(plots_dir, name))
     plt.clf()
     plt.close()
