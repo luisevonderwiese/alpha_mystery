@@ -10,6 +10,7 @@ from scipy.stats import somersd, rankdata
 import util
 import rates
 import raxmlng
+import pythia
 
 
 def scatterplot(dfs, prefix_a, column_a, prefix_b, column_b):
@@ -74,6 +75,8 @@ def statistical_analysis(prefix, alpha_column, other_columns):
 
 
 results_dir = os.path.join("results", "raxml")
+pythia_dir = os.path.join("results", "pythia")
+
 with open('data/MULTI_X.txt') as f:
     x_values = json.loads(f.read())
 
@@ -89,10 +92,14 @@ for dataset in datasets:
         msa_path = os.path.join("data/msa/", dataset, prefix + "bin.phy")
         #for model in bin_models:
             #raxmlng.run_inference(msa_path, model, os.path.join(results_dir, dataset, prefix + model))
+    d = os.path.join(pythia_dir, dataset)
+    if not os.path.isdir(d):
+        os.makedirs(d)
+    pythia.run_with_padding(os.path.join("data/msa/", dataset, "bin.phy"), os.path.join(d, "difficulty"))
     #raxmlng.run_inference(os.path.join("data/msa/", dataset, "bin.catg"), "BIN+G", os.path.join(results_dir, dataset, "prob_BIN+G"), "--prob-msa on")
     #raxmlng.run_inference(os.path.join("data/msa/", dataset, "multi.catg"), "MULTI" + str(x_values[dataset]) + "_MK+G", os.path.join(results_dir, dataset, "prob_MULTIxMK+G"), "--prob-msa on")
-
-columns = ["dataset", "num_taxa", "num_sites", "area", "entropy_var", "inv_sites_emp", "zero_freq_emp", "inv_sites_estimate", "zero_freq_estimate", "free_rates_var", "brlensum"]
+        
+columns = ["dataset", "num_taxa", "num_sites", "area", "entropy_var", "inv_sites_emp", "zero_freq_emp", "inv_sites_estimate", "zero_freq_estimate", "free_rates_var", "brlensum", "difficulty"]
 columns += ["alpha_" + model for model in gamma_models]
 dfs = {}
 for prefix in prefixes:
@@ -115,6 +122,8 @@ for prefix in prefixes:
             var = float("nan")
         df.at[i, "free_rates_var"] = var
         df.at[i, "brlensum"] = raxmlng.brlensum(os.path.join(results_dir, dataset, prefix + "BIN+G"))
+        df.at[i, "difficulty"] = pythia.get_difficulty(os.path.join(pythia_dir, dataset, "difficulty"))
+
         for model in gamma_models:
             if model.startswith("prob_") and prefix != "":
                 continue
@@ -161,7 +170,7 @@ scatterplot(dfs, "", "inv_sites_emp", "equalfreq_", "inv_sites_emp")
 scatterplot(dfs, "", "inv_sites_estimate", "equalfreq_", "inv_sites_estimate")
 
 statistical_analysis("", "alpha_BIN+G",
-        ["num_taxa", "num_sites", "entropy_var", "inv_sites_emp", "zero_freq_emp", "inv_sites_estimate", "free_rates_var", "brlensum", "area"])
+        ["num_taxa", "num_sites", "entropy_var", "inv_sites_emp", "zero_freq_emp", "inv_sites_estimate", "free_rates_var", "brlensum", "area", "difficulty"])
 
 
 
