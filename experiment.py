@@ -46,6 +46,7 @@ def get_auc_score(dfs, prefix_a, column_a, prefix_b, column_b):
             binary_filtered.append(binary[i])
     return roc_auc_score(binary_filtered, data_b_filtered)
 
+#Somers’ D = 2 * AUC – 1
 def get_somersd(dfs, prefix_a, column_a, prefix_b, column_b):
     data_a = dfs[prefix_a][column_a]
     data_b = dfs[prefix_b][column_b]
@@ -66,11 +67,12 @@ def statistical_analysis(prefix, alpha_column, other_columns):
     for column in other_columns:
         r = [column]
         r.append(get_auc_score(dfs, prefix, alpha_column, prefix, column))
-        d = get_somersd(dfs, prefix, alpha_column, prefix, column)
-        r.append(d[0])
-        r.append(d[1])
+        #d = get_somersd(dfs, prefix, alpha_column, prefix, column)
+        #r.append(d[0])
+        #r.append(d[1])
         res.append(r)
-    headers = ["column", "AUC", "Somers' D", "Somers' D - pvalue"]
+    headers = ["column", "AUC"]
+           # "Somers' D", "Somers' D - pvalue"]
     print(tabulate(res, tablefmt="pipe", headers=headers))
 
 
