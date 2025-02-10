@@ -15,5 +15,5 @@ Ground Truth Difficulties
 ```
 python remove_invariant_sites.py
 python experiment.py
-python aic_analysis.py
+python AIC_analysis.py
 ```

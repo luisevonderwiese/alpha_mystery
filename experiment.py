@@ -98,6 +98,8 @@ for dataset in datasets:
     raxmlng.run_inference(os.path.join("data/msa/", dataset, "bin.catg"), "BIN+G", os.path.join(results_dir, dataset, "prob_BIN+G"), "--prob-msa on")
     raxmlng.run_inference(os.path.join("data/msa/", dataset, "multi.catg"), "MULTI" + str(x_values[dataset]) + "_MK+G", os.path.join(results_dir, dataset, "prob_MULTIxMK+G"), "--prob-msa on")
         
+difficult_df = pd.read_csv("data/results_lexibench_difficult.csv")
+
 columns = [
         "dataset", 
         "num_sites", 
@@ -141,7 +143,7 @@ for prefix in prefixes:
             raxml_prefix = os.path.join(results_dir, dataset, prefix + model)
             df.at[i, "alpha_" + model] = raxmlng.alpha(raxml_prefix)
     df = df.merge(metadata_df, on = "dataset")
-    print(df.columns)
+    df = df.merge(difficult_df, on = "dataset")
     dfs[prefix] = df
 
 if not os.path.isdir(os.path.join("results", "plots")):
@@ -193,7 +195,8 @@ statistical_analysis("", "alpha_BIN+G",
             "bin_entropy",
             "columns_per_concept",
             "concepts_per_language",
-            "average_mutual_coverage"
+            "average_mutual_coverage",
+            "difficult"
             ])
 
 
