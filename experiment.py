@@ -43,7 +43,14 @@ def get_auc_score(dfs, prefix_a, column_a, prefix_b, column_b):
         if value == value:
             data_b_filtered.append(value)
             binary_filtered.append(binary[i])
-    return roc_auc_score(binary_filtered, data_b_filtered)
+    zero_values = [data_b_filtered[i] for i, val in enumerate(binary_filtered) if val == 0]
+    one_values = [data_b_filtered[i] for i, val in enumerate(binary_filtered) if val == 1]
+    auc = roc_auc_score(binary_filtered, data_b_filtered)
+    negative = False
+    if auc < 0.5:
+        auc =  roc_auc_score(binary_filtered, [-el for el in  data_b_filtered])
+        negative = True
+    return [2 * auc - 1, negative, sum(zero_values) / len(zero_values), sum(one_values) / len(one_values)] 
 
 #Somers’ D = 2 * AUC – 1
 def get_somersd(dfs, prefix_a, column_a, prefix_b, column_b):
@@ -65,12 +72,16 @@ def statistical_analysis(prefix, alpha_column, other_columns):
     res = []
     for column in other_columns:
         r = [column]
-        r.append(get_auc_score(dfs, prefix, alpha_column, prefix, column))
+        a = get_auc_score(dfs, prefix, alpha_column, prefix, column)
+        r.append(round(a[0], 3))
+        r.append(a[1])
+        r.append(round(a[2], 3))
+        r.append(round(a[3], 3))
         #d = get_somersd(dfs, prefix, alpha_column, prefix, column)
         #r.append(d[0])
         #r.append(d[1])
         res.append(r)
-    headers = ["column", "AUC"]
+    headers = ["column", "AUC", "negative correlation", "low alpha mean", "high alpha mean"]
            # "Somers' D", "Somers' D - pvalue"]
     print(tabulate(res, tablefmt="pipe", headers=headers))
 
@@ -81,9 +92,12 @@ x_values = {}
 for i, row in metadata_df.iterrows():
     x_values[row["dataset"]] = row["max_num_cognate_classes"]
 
-bin_models = ["BIN", "BIN+G", "BIN+FE+G", "BIN+FC+G", "BIN+R4", "BIN+FO+I"]
-gamma_models = ["BIN+G", "BIN+FE+G", "BIN+FC+G", "prob_MULTIxMK+G", "prob_BIN+G"]
-prefixes = ["", "noinvsite_"]
+#bin_models = ["BIN", "BIN+G", "BIN+FE+G", "BIN+FC+G", "BIN+R4", "BIN+FO+I"]
+#gamma_models = ["BIN+G", "BIN+FE+G", "BIN+FC+G", "prob_MULTIxMK+G", "prob_BIN+G"]
+bin_models = ["BIN", "BIN+G", "BIN+R4", "BIN+FO+I"]
+gamma_models = ["BIN+G", "prob_MULTIxMK+G", "prob_BIN+G"]
+
+prefixes = [""]
 large_datasets =  ["abvdoceanic", "bowernpny", "iecor"]
 datasets = os.listdir("data/msa")
 datasets = [d for d in datasets if d not in large_datasets]
@@ -107,11 +121,9 @@ columns = [
         "inv_sites_emp", 
         "zero_freq_emp", 
         "inv_sites_estimate", 
-        "zero_freq_estimate", 
         "free_rates_var", 
-        "brlensum", 
-        "q_residual_score",
-        "delta_score"]
+        "inv_sites_error",
+        ]
 columns += ["alpha_" + model for model in gamma_models]
 dfs = {}
 for prefix in prefixes:
@@ -129,13 +141,11 @@ for prefix in prefixes:
         df.at[i, "zero_freq_emp"] = util.zero_freq(align)
 
         df.at[i, "inv_sites_estimate"] = raxmlng.inv_estimate(os.path.join(results_dir, dataset, prefix + "BIN+FO+I")) * 100
-        df.at[i, "zero_freq_estimate"] = raxmlng.zero_freq_estimate(os.path.join(results_dir, dataset, prefix + "BIN+G"))
         var = rates.var(rates.parse_rates(raxmlng.free_rates(os.path.join(results_dir, dataset, prefix + "BIN+R4"))))
         if var > 10:
             var = float("nan")
         df.at[i, "free_rates_var"] = var
-        df.at[i, "q_residual_score"] = util.q_residual_score(align)
-        df.at[i, "delta_score"] = util.delta_score(align)
+        df.at[i, "inv_sites_error"] = abs(df.at[i, "inv_sites_estimate"] - df.at[i, "inv_sites_emp"])
 
         for model in gamma_models:
             if model.startswith("prob_") and prefix != "":
@@ -148,55 +158,28 @@ for prefix in prefixes:
 
 if not os.path.isdir(os.path.join("results", "plots")):
     os.makedirs(os.path.join("results", "plots"))
-scatterplot(dfs, "", "alpha_BIN+G", "", "alpha_BIN+FE+G")
-scatterplot(dfs, "", "alpha_BIN+G", "", "alpha_BIN+FC+G")
-scatterplot(dfs, "", "alpha_BIN+FE+G", "", "alpha_BIN+FC+G")
-scatterplot(dfs, "", "alpha_BIN+G", "", "alpha_prob_BIN+G")
+
 scatterplot(dfs, "", "alpha_BIN+G", "", "alpha_prob_MULTIxMK+G")
-scatterplot(dfs, "", "alpha_BIN+G", "", "num_languages")
-scatterplot(dfs, "", "alpha_BIN+G", "", "num_sites")
-scatterplot(dfs, "", "alpha_BIN+G", "", "entropy_var")
-scatterplot(dfs, "", "alpha_BIN+G", "", "inv_sites_emp")
-scatterplot(dfs, "", "alpha_BIN+G", "", "zero_freq_emp")
-scatterplot(dfs, "", "alpha_BIN+G", "", "inv_sites_estimate")
-scatterplot(dfs, "", "alpha_BIN+G", "", "free_rates_var")
 
 
-scatterplot(dfs, "", "zero_freq_emp", "", "zero_freq_estimate")
-scatterplot(dfs, "", "alpha_BIN+FE+G", "", "zero_freq_emp")
-scatterplot(dfs, "", "alpha_BIN+G", "", "zero_freq_estimate")
-scatterplot(dfs, "", "alpha_BIN+FE+G", "", "inv_sites_emp")
 
 
-scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "entropy_var")
-scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "num_sites")
-scatterplot(dfs, "noinvsite_", "alpha_BIN+FE+G", "noinvsite_", "zero_freq_emp")
-scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "zero_freq_estimate")
-scatterplot(dfs, "noinvsite_", "alpha_BIN+G", "noinvsite_", "zero_freq_emp")
-scatterplot(dfs, "", "alpha_BIN+G", "noinvsite_", "alpha_BIN+G")
+
 
 
 statistical_analysis("", "alpha_BIN+G",
-        [ 
-            "num_sites", 
+        [
+            "inv_sites_error",
+            "free_rates_var",
+            "num_languages",
+            "num_sites",
+            "num_concepts",
+            "columns_per_concept",
+            "zero_freq_emp",
             "entropy_var", 
             "inv_sites_emp", 
-            "zero_freq_emp", 
-            "inv_sites_estimate", 
-            "free_rates_var", 
-            "q_residual_score",
-            "delta_score",
-            "num_languages",
-            "num_concepts",
-            "num_families",
-            "polymorphic_cell_ratio",
-            "polymorphic_concept_ratio",
-            "cognate_ratio",
             "bin_entropy",
-            "columns_per_concept",
-            "concepts_per_language",
-            "average_mutual_coverage",
-            "difficult"
+            "difficult",
             ])
 
 
