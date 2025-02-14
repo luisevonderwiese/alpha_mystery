@@ -7,7 +7,11 @@ Project for the evaluation of a model for cognate data implemented in RAxML-NG
 conda env create -f environment.yml
 conda acitvate alpha-mystery
 ```
-2. Data:
+2. Install iqtree
+Install iqtree following the instructions on their [website](http://www.iqtree.org/doc/Quickstart).
+Adapt `ìq_tree_path` in `iqtree.py`.
+
+3. Data:
 Lexibench
 Ground Truth Difficulties
 

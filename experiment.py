@@ -46,11 +46,11 @@ def get_auc_score(dfs, prefix_a, column_a, prefix_b, column_b):
     zero_values = [data_b_filtered[i] for i, val in enumerate(binary_filtered) if val == 0]
     one_values = [data_b_filtered[i] for i, val in enumerate(binary_filtered) if val == 1]
     auc = roc_auc_score(binary_filtered, data_b_filtered)
-    negative = False
+    mult = 1
     if auc < 0.5:
         auc =  roc_auc_score(binary_filtered, [-el for el in  data_b_filtered])
-        negative = True
-    return [2 * auc - 1, negative, sum(zero_values) / len(zero_values), sum(one_values) / len(one_values)] 
+        mult = -1
+    return [mult * (2 * auc - 1), sum(zero_values) / len(zero_values), sum(one_values) / len(one_values)] 
 
 #Somers’ D = 2 * AUC – 1
 def get_somersd(dfs, prefix_a, column_a, prefix_b, column_b):
@@ -74,16 +74,15 @@ def statistical_analysis(prefix, alpha_column, other_columns):
         r = [column]
         a = get_auc_score(dfs, prefix, alpha_column, prefix, column)
         r.append(round(a[0], 3))
-        r.append(a[1])
+        r.append(round(a[1], 3))
         r.append(round(a[2], 3))
-        r.append(round(a[3], 3))
         #d = get_somersd(dfs, prefix, alpha_column, prefix, column)
         #r.append(d[0])
         #r.append(d[1])
         res.append(r)
-    headers = ["column", "AUC", "negative correlation", "low alpha mean", "high alpha mean"]
+    headers = ["column", "AUC", "low alpha mean", "high alpha mean"]
            # "Somers' D", "Somers' D - pvalue"]
-    print(tabulate(res, tablefmt="pipe", headers=headers))
+    print(tabulate(res, tablefmt="latex", headers=headers))
 
 
 results_dir = os.path.join("results", "raxml")
@@ -169,18 +168,36 @@ scatterplot(dfs, "", "alpha_BIN+G", "", "alpha_prob_MULTIxMK+G")
 
 statistical_analysis("", "alpha_BIN+G",
         [
-            "inv_sites_error",
-            "free_rates_var",
+            "entropy_var",
             "num_languages",
             "num_sites",
             "num_concepts",
             "columns_per_concept",
-            "zero_freq_emp",
-            "entropy_var", 
-            "inv_sites_emp", 
-            "bin_entropy",
             "difficult",
+            "free_rates_var",
+            "inv_sites_emp",
+            "inv_sites_estimate",
+            "inv_sites_error",
+            #"zero_freq_emp",
+            #"bin_entropy",
             ])
 
 
+res_low = []
+res_high = []
+for i, row in dfs[""].iterrows():
+    r = [row["dataset"], row["num_languages"], row["columns_per_concept"], row["alpha_BIN+G"]]
+    if row["alpha_BIN+G"] > 90:
+        res_high.append(r)
+    else:
+        res_low.append(r)
 
+headers = ["dataset", "num_languages", "columns_per_concept", "alpha"]
+print("low alpha")
+print(tabulate(res_low, tablefmt="pipe", headers=headers))
+print("high alpha")
+print(tabulate(res_high, tablefmt="pipe", headers=headers))
+
+print(max(dfs[""]["alpha_prob_MULTIxMK+G"]))
+df = dfs[""]
+print(max(df[df["alpha_BIN+G"] <= 90]["alpha_BIN+G"]))
