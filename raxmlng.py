@@ -17,7 +17,7 @@ def brlensum(prefix):
 def alpha(prefix):
     if not os.path.isfile(prefix + ".raxml.log"):
         return float("nan")
-    with open(prefix + ".raxml.log", "r") as logfile:
+    with open(prefix + ".raxml.log", "r", encoding = "utf-8") as logfile:
         lines = logfile.readlines()
     for line in lines:
         if line.startswith("   Rate heterogeneity:"):
@@ -28,7 +28,7 @@ def alpha(prefix):
 def inv_estimate(prefix):
     if not os.path.isfile(prefix + ".raxml.log"):
         return float("nan")
-    with open(prefix + ".raxml.log", "r") as logfile:
+    with open(prefix + ".raxml.log", "r", encoding = "utf-8") as logfile:
         lines = logfile.readlines()
     for line in lines:
         if line.startswith("   P-inv"):
@@ -37,7 +37,7 @@ def inv_estimate(prefix):
 
 
 def final_llh(prefix):
-    with open(prefix + ".raxml.log", "r") as logfile:
+    with open(prefix + ".raxml.log", "r", encoding = "utf-8") as logfile:
         lines = logfile.readlines()
     for line in lines:
         if line.startswith("Final LogLikelihood: "):
@@ -48,7 +48,7 @@ def final_llh(prefix):
 def zero_freq_estimate(prefix):
     if not os.path.isfile(prefix + ".raxml.log"):
         return float("nan")
-    with open(prefix + ".raxml.log", "r") as logfile:
+    with open(prefix + ".raxml.log", "r", encoding = "utf-8") as logfile:
         lines = logfile.readlines()
     for line in lines:
         if line.startswith("   Base frequencies (ML)"):
@@ -57,7 +57,7 @@ def zero_freq_estimate(prefix):
 
 
 def free_rates(prefix):
-    with open(prefix + ".raxml.log", "r") as logfile:
+    with open(prefix + ".raxml.log", "r", encoding = "utf-8") as logfile:
         lines = logfile.readlines()
     for line in lines:
         if line.startswith("   Rate heterogeneity: "):
@@ -68,7 +68,7 @@ def aic(prefix):
     logpath = prefix + ".raxml.log"
     if not os.path.isfile(logpath):
         return [float('nan'), float('nan'), float('nan')]
-    with open(logpath, "r") as logfile:
+    with open(logpath, "r", encoding = "utf-8") as logfile:
         lines = logfile.readlines()
     for line in lines:
         if line.startswith("AIC"):
@@ -126,7 +126,7 @@ def siterate_lhs(prefix):
     path = siterate_lhs_path(prefix)
     if not os.path.isfile(path):
         return []
-    with open(path, "r") as f:
+    with open(path, "r", encoding = "utf-8") as f:
         lines = f.readlines()
     siteratelhs = []
     for line in lines:

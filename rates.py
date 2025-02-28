@@ -1,5 +1,3 @@
-import math
-
 def parse_rates(s):
     parts = s.split(" ")
     wr = []

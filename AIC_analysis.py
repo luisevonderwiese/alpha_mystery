@@ -46,7 +46,7 @@ for dataset in datasets:
 print(max(errors))
 
 
-def plausible_tree_anaylsis(datasets, reference_model):
+def plausible_tree_anaylsis(datasets, reference_model, high_alpha_only):
     results_dir = os.path.join("results", "raxml")
     iqtree_dir = os.path.join("results", "iqtree")
 
@@ -55,7 +55,7 @@ def plausible_tree_anaylsis(datasets, reference_model):
     non_plausible_count = 0
     for dataset in datasets:
         alpha = raxmlng.alpha(os.path.join(results_dir, dataset, "BIN+G"))
-        if alpha <= 90:
+        if alpha <= 90 and high_alpha_only:
             continue
 
         msa_path = os.path.join("data/msa", dataset, "bin.phy")
@@ -75,6 +75,7 @@ def plausible_tree_anaylsis(datasets, reference_model):
     print("Not plausible: \t\t", str(non_plausible_count))
     print("Plausible: \t\t", str(plausible_count))
     print("Plausible + identical: \t", str(identical_count))
-plausible_tree_anaylsis(datasets, "BIN")
-plausible_tree_anaylsis(datasets, "prob_MULTIxMK+G")
 
+
+plausible_tree_anaylsis(datasets, "BIN", True)
+plausible_tree_anaylsis(datasets, "prob_MULTIxMK+G", True)

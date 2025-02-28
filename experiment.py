@@ -1,11 +1,8 @@
 import os
 from tabulate import tabulate
-import json
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score
-from scipy.stats import somersd, rankdata
-
 
 import util
 import rates
@@ -52,20 +49,6 @@ def get_auc_score(dfs, prefix_a, column_a, prefix_b, column_b):
         mult = -1
     return [mult * (2 * auc - 1), sum(zero_values) / len(zero_values), sum(one_values) / len(one_values)] 
 
-#Somers’ D = 2 * AUC – 1
-def get_somersd(dfs, prefix_a, column_a, prefix_b, column_b):
-    data_a = dfs[prefix_a][column_a]
-    data_b = dfs[prefix_b][column_b]
-    binary = to_binary(data_a)
-    data_b_filtered = []
-    binary_filtered = []
-    for i, value in enumerate(data_b):
-        if value == value:
-            data_b_filtered.append(value)
-            binary_filtered.append(binary[i])
-
-    s = somersd(binary_filtered, data_b_filtered)
-    return (s.statistic, s.pvalue)
 
 def statistical_analysis(prefix, alpha_column, other_columns):
     print(prefix, alpha_column)
@@ -76,12 +59,8 @@ def statistical_analysis(prefix, alpha_column, other_columns):
         r.append(round(a[0], 3))
         r.append(round(a[1], 3))
         r.append(round(a[2], 3))
-        #d = get_somersd(dfs, prefix, alpha_column, prefix, column)
-        #r.append(d[0])
-        #r.append(d[1])
         res.append(r)
     headers = ["column", "AUC", "low alpha mean", "high alpha mean"]
-           # "Somers' D", "Somers' D - pvalue"]
     print(tabulate(res, tablefmt="latex", headers=headers))
 
 

@@ -8,7 +8,7 @@ from phylogemetric import QResidualMetric
 
 
 def write_padded_msa(msa_path, outpath):
-    with open(msa_path, "r") as msa_file:
+    with open(msa_path, "r", encoding  ="utf-8") as msa_file:
         msa_string = msa_file.read()
     parts = msa_string.split("\n\n")
     lines = parts[-1].split("\n")
@@ -29,7 +29,7 @@ def write_padded_msa(msa_path, outpath):
 
     msa_string = "\n".join([" ".join(sub_parts[:-1] + [str(int(sub_parts[-1]) + padding_size)])] + parts[1:])
 
-    with open(outpath, "w+") as new_msa_file:
+    with open(outpath, "w+", encoding = "utf-8") as new_msa_file:
         new_msa_file.write(msa_string)
 
 def save_msa_read(path):
@@ -59,7 +59,7 @@ def site_entropy(site):
 def is_invariant(site):
     i = 0
     v0 = None
-    while(v0 is None and i < len(site)):
+    while (v0 is None and i < len(site)):
         if site[i] != "-":
             v0 = site[i]
         i+=1
@@ -127,4 +127,3 @@ def delta_score(align):
         return sum(delta_values.values()) / len(delta_values)
     except:
         return float('nan')
-
