@@ -7,6 +7,7 @@ from sklearn.metrics import roc_auc_score
 import util
 import rates
 import raxmlng
+import label_wrapper
 
 
 def scatterplot(dfs, prefix_a, column_a, prefix_b, column_b):
@@ -65,10 +66,19 @@ def statistical_analysis(prefix, alpha_column, other_columns):
 
 
 results_dir = os.path.join("results", "raxml")
-metadata_df = pd.read_csv("data/metadata.tsv", sep = "\t")
+label_dir = os.path.join("results", "difficulty_labels")
+if not os.path.isdir(label_dir):
+    os.makedirs(label_dir)
+metadata_df = pd.read_csv("data/lexibench/character_matrices/stats.tsv", sep = "\t")
+wl_df = pd.read_csv("data/lexibench/lingpy_wordlists/stats.tsv", sep = "\t")
+for i, row in wl_df.iterrows():
+    wl_df.at[i, "dataset"] = row["Dataset"] + "-" + row["Family"].lower()
+metadata_df = metadata_df.merge(wl_df, on = "dataset") 
+datasets = [row["dataset"] for _,row in metadata_df.iterrows()]
+datasets = [d for d in datasets if d != "abvdoceanic-austronesian"]
 x_values = {}
 for i, row in metadata_df.iterrows():
-    x_values[row["dataset"]] = row["max_num_cognate_classes"]
+    x_values[row["wordlist"].split("/")[-1].split(".")[0]] = row["cs_max"]
 
 #bin_models = ["BIN", "BIN+G", "BIN+FE+G", "BIN+FC+G", "BIN+R4", "BIN+FO+I"]
 #gamma_models = ["BIN+G", "BIN+FE+G", "BIN+FC+G", "prob_MULTIxMK+G", "prob_BIN+G"]
@@ -76,21 +86,19 @@ bin_models = ["BIN", "BIN+G", "BIN+R4", "BIN+FO+I"]
 gamma_models = ["BIN+G", "prob_MULTIxMK+G", "prob_BIN+G"]
 
 prefixes = [""]
-large_datasets =  ["abvdoceanic", "bowernpny", "iecor"]
-datasets = os.listdir("data/msa")
-datasets = [d for d in datasets if d not in large_datasets]
 
 for dataset in datasets:
     for prefix in prefixes:
-        msa_path = os.path.join("data/msa/", dataset, prefix + "bin.phy")
+        msa_path = os.path.join("data/lexibench/character_matrices/", dataset, prefix + "bin.phy")
         if not os.path.isfile(msa_path):
             continue
+        label_wrapper.calculate_label(msa_path, os.path.join(label_dir, prefix + dataset, "label"))
         for model in bin_models:
             raxmlng.run_inference(msa_path, model, os.path.join(results_dir, dataset, prefix + model))
-    raxmlng.run_inference(os.path.join("data/msa/", dataset, "bin.catg"), "BIN+G", os.path.join(results_dir, dataset, "prob_BIN+G"), "--prob-msa on")
-    raxmlng.run_inference(os.path.join("data/msa/", dataset, "multi.catg"), "MULTI" + str(x_values[dataset]) + "_MK+G", os.path.join(results_dir, dataset, "prob_MULTIxMK+G"), "--prob-msa on")
+    raxmlng.run_inference(os.path.join("data/lexibench/character_matrices/", dataset, "bin.catg"), "BIN+G", os.path.join(results_dir, dataset, "prob_BIN+G"), "--prob-msa on")
+    if x_values[dataset] <= 64:
+        raxmlng.run_inference(os.path.join("data/lexibench/character_matrices/", dataset, "multi.catg"), "MULTI" + str(x_values[dataset]) + "_MK+G", os.path.join(results_dir, dataset, "prob_MULTIxMK+G"), "--prob-msa on")
         
-difficult_df = pd.read_csv("data/results_lexibench_difficult.csv")
 
 columns = [
         "dataset", 
@@ -101,18 +109,21 @@ columns = [
         "inv_sites_estimate", 
         "free_rates_var", 
         "inv_sites_error",
+        "difficult"
         ]
 columns += ["alpha_" + model for model in gamma_models]
 dfs = {}
 for prefix in prefixes:
     df = pd.DataFrame(columns = columns)
     for i, dataset in enumerate(datasets):
+        print(dataset)
         df.at[i, "dataset"] = dataset
-        msa_path = os.path.join("data/msa/", dataset, prefix + "bin.phy")
+        msa_path = os.path.join("data/lexibench/character_matrices", dataset, prefix + "bin.phy")
         try:
             align = util.save_msa_read(msa_path)
         except:
             continue
+        print("reading done")
         df.at[i, "num_sites"] = util.num_sites(align)
         df.at[i, "entropy_var"] = util.entropy_var(align)
         df.at[i, "inv_sites_emp"] = util.inv_sites(align)
@@ -124,14 +135,16 @@ for prefix in prefixes:
             var = float("nan")
         df.at[i, "free_rates_var"] = var
         df.at[i, "inv_sites_error"] = abs(df.at[i, "inv_sites_estimate"] - df.at[i, "inv_sites_emp"])
-
+        try: 
+            df.at[i, "difficult"] = label_wrapper.get_label(os.path.join(label_dir, prefix + dataset, "label"))
+        except Exception as e:
+            print(e)
         for model in gamma_models:
             if model.startswith("prob_") and prefix != "":
                 continue
             raxml_prefix = os.path.join(results_dir, dataset, prefix + model)
             df.at[i, "alpha_" + model] = raxmlng.alpha(raxml_prefix)
     df = df.merge(metadata_df, on = "dataset")
-    df = df.merge(difficult_df, on = "dataset")
     dfs[prefix] = df
 
 if not os.path.isdir(os.path.join("results", "plots")):
@@ -139,7 +152,7 @@ if not os.path.isdir(os.path.join("results", "plots")):
 
 scatterplot(dfs, "", "alpha_BIN+G", "", "alpha_prob_MULTIxMK+G")
 
-
+print(dfs[""])
 
 
 
@@ -148,30 +161,31 @@ scatterplot(dfs, "", "alpha_BIN+G", "", "alpha_prob_MULTIxMK+G")
 statistical_analysis("", "alpha_BIN+G",
         [
             "entropy_var",
-            "num_languages",
+            "Languages",
             "num_sites",
-            "num_concepts",
-            "columns_per_concept",
+            "Concepts",
+            "cs_mean",
             "difficult",
             "free_rates_var",
             "inv_sites_emp",
             "inv_sites_estimate",
             "inv_sites_error",
-            #"zero_freq_emp",
+            "zero_freq_emp",
             #"bin_entropy",
             ])
+
 
 
 res_low = []
 res_high = []
 for i, row in dfs[""].iterrows():
-    r = [row["dataset"], row["num_languages"], row["columns_per_concept"], row["alpha_BIN+G"]]
+    r = [row["dataset"], row["Languages"], row["cs_mean"], row["alpha_BIN+G"]]
     if row["alpha_BIN+G"] > 90:
         res_high.append(r)
     else:
         res_low.append(r)
 
-headers = ["dataset", "num_languages", "columns_per_concept", "alpha"]
+headers = ["dataset", "Languages", "cs_mean", "alpha"]
 print("low alpha")
 print(tabulate(res_low, tablefmt="pipe", headers=headers))
 print("high alpha")
