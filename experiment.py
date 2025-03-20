@@ -71,11 +71,8 @@ if not os.path.isdir(label_dir):
     os.makedirs(label_dir)
 metadata_df = pd.read_csv("data/lexibench/character_matrices/stats.tsv", sep = "\t")
 wl_df = pd.read_csv("data/lexibench/lingpy_wordlists/stats.tsv", sep = "\t")
-for i, row in wl_df.iterrows():
-    wl_df.at[i, "dataset"] = row["Dataset"] + "-" + row["Family"].lower()
-metadata_df = metadata_df.merge(wl_df, on = "dataset") 
-datasets = [row["dataset"] for _,row in metadata_df.iterrows()]
-datasets = [d for d in datasets if d != "abvdoceanic-austronesian"]
+metadata_df = metadata_df.merge(wl_df, on = "Name") 
+datasets = [row["Name"] for _,row in metadata_df.iterrows()]
 x_values = {}
 for i, row in metadata_df.iterrows():
     x_values[row["wordlist"].split("/")[-1].split(".")[0]] = row["cs_max"]
@@ -101,8 +98,9 @@ for dataset in datasets:
         
 
 columns = [
-        "dataset", 
+        "Name", 
         "num_sites", 
+        "bin_entropy",
         "entropy_var", 
         "inv_sites_emp", 
         "zero_freq_emp", 
@@ -117,7 +115,7 @@ for prefix in prefixes:
     df = pd.DataFrame(columns = columns)
     for i, dataset in enumerate(datasets):
         print(dataset)
-        df.at[i, "dataset"] = dataset
+        df.at[i, "Name"] = dataset
         msa_path = os.path.join("data/lexibench/character_matrices", dataset, prefix + "bin.phy")
         try:
             align = util.save_msa_read(msa_path)
@@ -125,6 +123,7 @@ for prefix in prefixes:
             continue
         print("reading done")
         df.at[i, "num_sites"] = util.num_sites(align)
+        df.at[i, "bin_entropy"] = util.bin_entropy(align)
         df.at[i, "entropy_var"] = util.entropy_var(align)
         df.at[i, "inv_sites_emp"] = util.inv_sites(align)
         df.at[i, "zero_freq_emp"] = util.zero_freq(align)
@@ -144,7 +143,7 @@ for prefix in prefixes:
                 continue
             raxml_prefix = os.path.join(results_dir, dataset, prefix + model)
             df.at[i, "alpha_" + model] = raxmlng.alpha(raxml_prefix)
-    df = df.merge(metadata_df, on = "dataset")
+    df = df.merge(metadata_df, on = "Name")
     dfs[prefix] = df
 
 if not os.path.isdir(os.path.join("results", "plots")):
@@ -171,7 +170,7 @@ statistical_analysis("", "alpha_BIN+G",
             "inv_sites_estimate",
             "inv_sites_error",
             "zero_freq_emp",
-            #"bin_entropy",
+            "bin_entropy",
             ])
 
 
@@ -179,13 +178,13 @@ statistical_analysis("", "alpha_BIN+G",
 res_low = []
 res_high = []
 for i, row in dfs[""].iterrows():
-    r = [row["dataset"], row["Languages"], row["cs_mean"], row["alpha_BIN+G"]]
+    r = [row["Name"], row["Languages"], row["cs_mean"], row["alpha_BIN+G"]]
     if row["alpha_BIN+G"] > 90:
         res_high.append(r)
     else:
         res_low.append(r)
 
-headers = ["dataset", "Languages", "cs_mean", "alpha"]
+headers = ["Name", "Languages", "cs_mean", "alpha"]
 print("low alpha")
 print(tabulate(res_low, tablefmt="pipe", headers=headers))
 print("high alpha")

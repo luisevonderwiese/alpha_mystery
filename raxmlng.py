@@ -16,12 +16,15 @@ def brlensum(prefix):
 
 def alpha(prefix):
     if not os.path.isfile(prefix + ".raxml.log"):
+        print(prefix + " log does not exist")
         return float("nan")
     with open(prefix + ".raxml.log", "r", encoding = "utf-8") as logfile:
         lines = logfile.readlines()
     for line in lines:
         if line.startswith("   Rate heterogeneity:"):
-            return float(line.split(",  ")[1].split(" ")[1])
+            alpha_string = line.split(",  ")[1].split(" ")[1]
+            return float(alpha_string)
+    print(prefix + " line not found")
     return float('nan')
 
 
