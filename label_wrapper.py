@@ -9,7 +9,7 @@ def label_command(msa_path, prefix):
     os.system(command)
 
 def get_label(prefix):
-    with open(prefix + ".labelGen.log", "r") as out_file:
+    with open(prefix + ".labelGen.log", "r", encoding="utf-8") as out_file:
         line = out_file.readlines()[-3]
     if not line.startswith("Ground Truth Difficulty"):
         raise ValueError("Error during label calculation")
@@ -18,12 +18,12 @@ def get_label(prefix):
 def calculate_label(msa_path, prefix):
     try:
         get_label(prefix)
-    except (FileNotFoundError, ValueError) as e1:
+    except (FileNotFoundError, ValueError):
         print("calculating difficulty label")
         label_command(msa_path, prefix)
         try:
             get_label(prefix)
-        except ValueError as e:
+        except ValueError:
             print("trying with padded msa")
             util.write_padded_msa(msa_path, "temp.phy")
             label_command("temp.phy", prefix)
