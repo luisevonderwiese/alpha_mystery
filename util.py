@@ -2,9 +2,6 @@ import os
 import math
 import numpy as np
 from Bio import AlignIO
-from phylogemetric import DeltaScoreMetric
-from phylogemetric import QResidualMetric
-
 
 
 def write_padded_msa(msa_path, outpath):
@@ -103,33 +100,3 @@ def zero_freq(align):
         ones += site.count("1")
         zeros += site.count("0")
     return zeros / (ones + zeros)
-
-
-def required_one_sites(align):
-    ones = 0
-    zeros = 0
-    for site_index in range(align.get_alignment_length()):
-        site = align[:, site_index]
-        ones += site.count("1")
-        zeros += site.count("0")
-    return max(0, math.floor((zeros - ones) / len(align)))
-
-def q_residual_score(align):
-    matrix =  {}
-    for record in align:
-        matrix[record.id] = record.seq
-    try:
-        q_values = QResidualMetric(matrix).score(workers=4)
-        return sum(q_values.values()) / len(q_values)
-    except:
-        return float('nan')
-
-def delta_score(align):
-    matrix =  {}  
-    for record in align:
-        matrix[record.id] = record.seq
-    try:
-        delta_values = DeltaScoreMetric(matrix).score(workers=4)
-        return sum(delta_values.values()) / len(delta_values)
-    except:
-        return float('nan')

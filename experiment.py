@@ -10,13 +10,11 @@ import raxmlng
 import label_wrapper
 
 
-def scatterplot(dfs, prefix_a, column_a, prefix_b, column_b):
-    data_a = dfs[prefix_a][column_a]
-    data_b = dfs[prefix_b][column_b]
-    plt.scatter(data_a, data_b, s=10)
-    plt.xlabel(prefix_a + column_a)
-    plt.ylabel(prefix_b + column_b)
-    name = prefix_a + column_a + "_vs_" + prefix_b + column_b + ".png"
+def scatterplot(df, column_a, column_b):
+    plt.scatter(df[column_a], df[column_b], s=10)
+    plt.xlabel(column_a)
+    plt.ylabel(column_b)
+    name = column_a + "_vs_" + column_b + ".png"
     plt.savefig(os.path.join("results", "plots", name))
     plt.clf()
     plt.close()
@@ -31,9 +29,9 @@ def to_binary(alpha_values):
             binary.append(0)
     return binary
 
-def get_auc_score(dfs, prefix_a, column_a, prefix_b, column_b):
-    data_a = dfs[prefix_a][column_a]
-    data_b = dfs[prefix_b][column_b]
+def get_auc_score(df, column_a, column_b):
+    data_a = df[column_a]
+    data_b = df[column_b]
     binary = to_binary(data_a)
     data_b_filtered = []
     binary_filtered = []
@@ -51,12 +49,12 @@ def get_auc_score(dfs, prefix_a, column_a, prefix_b, column_b):
     return [mult * (2 * auc - 1), sum(zero_values) / len(zero_values), sum(one_values) / len(one_values)] 
 
 
-def statistical_analysis(prefix, alpha_column, other_columns):
-    print(prefix, alpha_column)
+def statistical_analysis(df, alpha_column, other_columns):
+    print(alpha_column)
     res = []
     for column in other_columns:
         r = [column]
-        a = get_auc_score(dfs, prefix, alpha_column, prefix, column)
+        a = get_auc_score(df, alpha_column, column)
         r.append(round(a[0], 3))
         r.append(round(a[1], 3))
         r.append(round(a[2], 3))
@@ -77,24 +75,21 @@ x_values = {}
 for i, row in metadata_df.iterrows():
     x_values[row["wordlist"].split("/")[-1].split(".")[0]] = row["cs_max"]
 
-#bin_models = ["BIN", "BIN+G", "BIN+FE+G", "BIN+FC+G", "BIN+R4", "BIN+FO+I"]
-#gamma_models = ["BIN+G", "BIN+FE+G", "BIN+FC+G", "prob_MULTIxMK+G", "prob_BIN+G"]
 bin_models = ["BIN", "BIN+G", "BIN+R4", "BIN+FO+I"]
 gamma_models = ["BIN+G", "prob_MULTIxMK+G", "prob_BIN+G"]
 
-prefixes = [""]
-
 for dataset in datasets:
-    for prefix in prefixes:
-        msa_path = os.path.join("data/lexibench/character_matrices/", dataset, prefix + "bin.phy")
-        if not os.path.isfile(msa_path):
-            continue
-        label_wrapper.calculate_label(msa_path, os.path.join(label_dir, prefix + dataset, "label"))
-        for model in bin_models:
-            raxmlng.run_inference(msa_path, model, os.path.join(results_dir, dataset, prefix + model))
-    raxmlng.run_inference(os.path.join("data/lexibench/character_matrices/", dataset, "bin.catg"), "BIN+G", os.path.join(results_dir, dataset, "prob_BIN+G"), "--prob-msa on")
+    msa_path = os.path.join("data/lexibench/character_matrices/", dataset, "bin.phy")
+    if not os.path.isfile(msa_path):
+        continue
+    label_wrapper.calculate_label(msa_path, os.path.join(label_dir, dataset, "label"))
+    for model in bin_models:
+        raxmlng.run_inference(msa_path, model, os.path.join(results_dir, dataset, model))
+    raxmlng.run_inference(os.path.join("data/lexibench/character_matrices/", dataset, "bin.catg"), 
+            "BIN+G", os.path.join(results_dir, dataset, "prob_BIN+G"), "--prob-msa on")
     if x_values[dataset] <= 64:
-        raxmlng.run_inference(os.path.join("data/lexibench/character_matrices/", dataset, "multi.catg"), "MULTI" + str(x_values[dataset]) + "_MK+G", os.path.join(results_dir, dataset, "prob_MULTIxMK+G"), "--prob-msa on")
+        raxmlng.run_inference(os.path.join("data/lexibench/character_matrices/", dataset, "multi.catg"), 
+                "MULTI" + str(x_values[dataset]) + "_MK+G", os.path.join(results_dir, dataset, "prob_MULTIxMK+G"), "--prob-msa on")
         
 
 columns = [
@@ -110,56 +105,45 @@ columns = [
         "difficult"
         ]
 columns += ["alpha_" + model for model in gamma_models]
-dfs = {}
-for prefix in prefixes:
-    df = pd.DataFrame(columns = columns)
-    for i, dataset in enumerate(datasets):
-        print(dataset)
-        df.at[i, "Name"] = dataset
-        msa_path = os.path.join("data/lexibench/character_matrices", dataset, prefix + "bin.phy")
-        try:
-            align = util.save_msa_read(msa_path)
-        except:
-            continue
-        print("reading done")
-        df.at[i, "num_sites"] = util.num_sites(align)
-        df.at[i, "bin_entropy"] = util.bin_entropy(align)
-        df.at[i, "entropy_var"] = util.entropy_var(align)
-        df.at[i, "inv_sites_emp"] = util.inv_sites(align)
-        df.at[i, "zero_freq_emp"] = util.zero_freq(align)
+df = pd.DataFrame(columns = columns)
+for i, dataset in enumerate(datasets):
+    print(dataset)
+    df.at[i, "Name"] = dataset
+    msa_path = os.path.join("data/lexibench/character_matrices", dataset, "bin.phy")
+    try:
+        align = util.save_msa_read(msa_path)
+    except:
+        continue
+    df.at[i, "num_sites"] = util.num_sites(align)
+    df.at[i, "bin_entropy"] = util.bin_entropy(align)
+    df.at[i, "entropy_var"] = util.entropy_var(align)
+    df.at[i, "inv_sites_emp"] = util.inv_sites(align)
+    df.at[i, "zero_freq_emp"] = util.zero_freq(align)
 
-        df.at[i, "inv_sites_estimate"] = raxmlng.inv_estimate(os.path.join(results_dir, dataset, prefix + "BIN+FO+I")) * 100
-        var = rates.var(rates.parse_rates(raxmlng.free_rates(os.path.join(results_dir, dataset, prefix + "BIN+R4"))))
-        if var > 10:
-            var = float("nan")
-        df.at[i, "free_rates_var"] = var
-        df.at[i, "inv_sites_error"] = abs(df.at[i, "inv_sites_estimate"] - df.at[i, "inv_sites_emp"])
-        try: 
-            df.at[i, "difficult"] = label_wrapper.get_label(os.path.join(label_dir, prefix + dataset, "label"))
-        except Exception as e:
-            print(e)
-        for model in gamma_models:
-            if model.startswith("prob_") and prefix != "":
-                continue
-            raxml_prefix = os.path.join(results_dir, dataset, prefix + model)
-            df.at[i, "alpha_" + model] = raxmlng.alpha(raxml_prefix)
-    df = df.merge(metadata_df, on = "Name")
-    dfs[prefix] = df
+    df.at[i, "inv_sites_estimate"] = raxmlng.inv_estimate(os.path.join(results_dir, dataset, "BIN+FO+I")) * 100
+    var = rates.var(rates.parse_rates(raxmlng.free_rates(os.path.join(results_dir, dataset, "BIN+R4"))))
+    if var > 10:
+        var = float("nan")
+    df.at[i, "free_rates_var"] = var
+    df.at[i, "inv_sites_error"] = abs(df.at[i, "inv_sites_estimate"] - df.at[i, "inv_sites_emp"])
+    try:
+        df.at[i, "difficult"] = label_wrapper.get_label(os.path.join(label_dir, dataset, "label"))
+    except ValueError:
+        continue
+    for model in gamma_models:
+        raxml_prefix = os.path.join(results_dir, dataset, model)
+        df.at[i, "alpha_" + model] = raxmlng.alpha(raxml_prefix)
+    
+df = df.merge(metadata_df, on = "Name")
 
 if not os.path.isdir(os.path.join("results", "plots")):
     os.makedirs(os.path.join("results", "plots"))
 
-scatterplot(dfs, "", "alpha_BIN+G", "", "alpha_prob_MULTIxMK+G")
-
-print(dfs[""])
+scatterplot(df, "alpha_BIN+G", "alpha_prob_MULTIxMK+G")
 
 
-
-
-
-statistical_analysis("", "alpha_BIN+G",
-        [
-            "entropy_var",
+statistical_analysis(df, "alpha_BIN+G",
+            ["entropy_var",
             "Languages",
             "num_sites",
             "Concepts",
@@ -177,7 +161,7 @@ statistical_analysis("", "alpha_BIN+G",
 
 res_low = []
 res_high = []
-for i, row in dfs[""].iterrows():
+for i, row in df.iterrows():
     r = [row["Name"], row["Languages"], row["cs_mean"], row["alpha_BIN+G"]]
     if row["alpha_BIN+G"] > 90:
         res_high.append(r)
@@ -190,6 +174,5 @@ print(tabulate(res_low, tablefmt="pipe", headers=headers))
 print("high alpha")
 print(tabulate(res_high, tablefmt="pipe", headers=headers))
 
-print(max(dfs[""]["alpha_prob_MULTIxMK+G"]))
-df = dfs[""]
+print(max(df[df["alpha_prob_MULTIxMK+G"].notnull()]["alpha_prob_MULTIxMK+G"]))
 print(max(df[df["alpha_BIN+G"] <= 90]["alpha_BIN+G"]))

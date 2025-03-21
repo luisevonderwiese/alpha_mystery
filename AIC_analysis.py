@@ -1,5 +1,6 @@
 import os
 from tabulate import tabulate
+import pandas as pd
 
 import raxmlng
 import iqtree
@@ -7,9 +8,9 @@ import iqtree
 results_dir = os.path.join("results", "raxml")
 iqtree_dir = os.path.join("results", "iqtree")
 
-large_datasets =  ["abvdoceanic", "bowernpny", "iecor"]
-datasets = os.listdir("data/msa")
-datasets = [d for d in datasets if d not in large_datasets]
+
+metadata_df = pd.read_csv("data/lexibench/character_matrices/stats.tsv", sep = "\t")
+datasets = [row["Name"] for _,row in metadata_df.iterrows()]
 
 low_het_bin = 0
 low_het_bing = 0
@@ -58,7 +59,7 @@ def plausible_tree_anaylsis(datasets, reference_model, high_alpha_only):
         if alpha <= 90 and high_alpha_only:
             continue
 
-        msa_path = os.path.join("data/msa", dataset, "bin.phy")
+        msa_path = os.path.join("data/lexibench/character_matrices", dataset, "bin.phy")
         ref_tree_path = raxmlng.best_tree_path(os.path.join(results_dir, dataset, reference_model))
         bing_tree_path = raxmlng.best_tree_path(os.path.join(results_dir, dataset, "BIN+G"))
         prefix = os.path.join(iqtree_dir, dataset, reference_model)

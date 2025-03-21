@@ -1,6 +1,6 @@
+bin/iqtree2
 data/*
 results/*
 results_old
-results_old_old
 temp.*
 **/__pycache__/

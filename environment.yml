@@ -1,3 +1,13 @@
--biopython
-pip:
-        -phylogemetric
+name: alpha-mystery
+channels:
+  - conda-forge
+  - anaconda
+dependencies:
+  - tabulate
+  - biopython
+  - pandas
+  - numpy
+  - pip:
+    -pylexibench
+    -pythialabelgenerator
+
