@@ -111,7 +111,7 @@ for i, dataset in enumerate(datasets):
     df.at[i, "Name"] = dataset
     msa_path = os.path.join("data/lexibench/character_matrices", dataset, "bin.phy")
     try:
-        align = util.save_msa_read(msa_path)
+        align = util.safe_msa_read(msa_path)
     except:
         continue
     df.at[i, "num_sites"] = util.num_sites(align)

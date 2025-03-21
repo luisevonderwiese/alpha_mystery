@@ -30,7 +30,7 @@ def write_padded_msa(msa_path, outpath):
         new_msa_file.write(msa_string)
 
 
-def save_msa_read(path):
+def safe_msa_read(path):
     try:
         if path.endswith("abvdoceanic-austronesian/bin.phy"):
             raise ValueError("Somehow reading of the MSA never finishes")

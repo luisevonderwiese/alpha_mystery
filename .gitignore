@@ -1,5 +1,7 @@
 bin/iqtree2
-data/*
+data/lexibench/character_matrices/*
+data/lexibench/download/*
+data/lexibench/lingpy_wordlists/*
 results/*
 results_old
 temp.*
