@@ -5,15 +5,6 @@ def best_tree_path(prefix):
     return prefix + ".raxml.bestTree"
 
 
-
-def brlensum(prefix):
-    tree_path = best_tree_path(prefix)
-    if not os.path.isfile(tree_path):
-        return float("nan")
-    tree = Tree(tree_path)
-    return sum([node.dist for node in tree.traverse("postorder")])
-
-
 def alpha(prefix):
     if not os.path.isfile(prefix + ".raxml.log"):
         print(prefix + " log does not exist")
@@ -86,8 +77,8 @@ def aic(prefix):
 
 
 def run_inference(msa_path, model, prefix, args = ""):
-    if not os.path.isfile(msa_path):
-        print("MSA " + msa_path + " does not exist")
+    if msa_path != msa_path:
+        print("MSA does not exist")
         return
     prefix_dir = "/".join(prefix.split("/")[:-1])
     if not os.path.isdir(prefix_dir):
@@ -102,36 +93,3 @@ def run_inference(msa_path, model, prefix, args = ""):
     command += " " + args
     os.system(command)
 
-
-def run_inference_adaptive(msa_path, model, prefix, args = ""):
-    if not os.path.isfile(msa_path):
-        print("MSA " + msa_path + " does not exist")
-        return
-    prefix_dir = "/".join(prefix.split("/")[:-1])
-    if not os.path.isdir(prefix_dir):
-        os.makedirs(prefix_dir)
-    if not os.path.isfile(best_tree_path(prefix)):
-        args = args + " --redo"
-    command = "./bin/raxml-ng-adaptive"
-    command += " --msa " + msa_path
-    command += " --model " + model
-    command += " --prefix " + prefix
-    command += " --search --thread 1 --simd none --site-repeats off --pat-comp off"
-    command += " " + args
-    os.system(command)
-
-
-
-def siterate_lhs_path(prefix):
-    return prefix + ".raxml.siterateLH"
-
-def siterate_lhs(prefix):
-    path = siterate_lhs_path(prefix)
-    if not os.path.isfile(path):
-        return []
-    with open(path, "r", encoding = "utf-8") as f:
-        lines = f.readlines()
-    siteratelhs = []
-    for line in lines:
-        siteratelhs.append([float(el) for el in line.split(" ")[:-1]])
-    return siteratelhs

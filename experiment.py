@@ -15,7 +15,7 @@ def scatterplot(df, column_a, column_b):
     plt.xlabel(column_a)
     plt.ylabel(column_b)
     name = column_a + "_vs_" + column_b + ".png"
-    plt.savefig(os.path.join("results", "plots", name))
+    plt.savefig(os.path.join("data", "plots", name))
     plt.clf()
     plt.close()
 
@@ -63,33 +63,27 @@ def statistical_analysis(df, alpha_column, other_columns):
     print(tabulate(res, tablefmt="latex", headers=headers))
 
 
-results_dir = os.path.join("results", "raxml")
-label_dir = os.path.join("results", "difficulty_labels")
+results_dir = os.path.join("data", "raxml")
+label_dir = os.path.join("data", "difficulty_labels")
 if not os.path.isdir(label_dir):
     os.makedirs(label_dir)
 metadata_df = pd.read_csv("data/lexibench/character_matrices/stats.tsv", sep = "\t")
 wl_df = pd.read_csv("data/lexibench/lingpy_wordlists/stats.tsv", sep = "\t")
 metadata_df = metadata_df.merge(wl_df, on = "Name") 
-datasets = [row["Name"] for _,row in metadata_df.iterrows()]
-x_values = {}
-for i, row in metadata_df.iterrows():
-    x_values[row["wordlist"].split("/")[-1].split(".")[0]] = row["cs_max"]
 
 bin_models = ["BIN", "BIN+G", "BIN+R4", "BIN+FO+I"]
 gamma_models = ["BIN+G", "prob_MULTIxMK+G", "prob_BIN+G"]
 
-for dataset in datasets:
-    msa_path = os.path.join("data/lexibench/character_matrices/", dataset, "bin.phy")
-    if not os.path.isfile(msa_path):
-        continue
-    label_wrapper.calculate_label(msa_path, os.path.join(label_dir, dataset, "label"))
+for i, row in metadata_df.iterrows():
+    dataset = row["Name"]
+    label_wrapper.calculate_label(row["bin.phy"], os.path.join(label_dir, dataset, "label"))
     for model in bin_models:
-        raxmlng.run_inference(msa_path, model, os.path.join(results_dir, dataset, model))
-    raxmlng.run_inference(os.path.join("data/lexibench/character_matrices/", dataset, "bin.catg"), 
-            "BIN+G", os.path.join(results_dir, dataset, "prob_BIN+G"), "--prob-msa on")
-    if x_values[dataset] <= 64:
+        raxmlng.run_inference(row["bin.phy"], model, os.path.join(results_dir, dataset, model))
+    raxmlng.run_inference(row["bin.catg"], "BIN+G", os.path.join(results_dir, dataset, "prob_BIN+G"), "--prob-msa on")
+    x = row["cs_max"]
+    if x <= 64:
         raxmlng.run_inference(os.path.join("data/lexibench/character_matrices/", dataset, "multi.catg"), 
-                "MULTI" + str(x_values[dataset]) + "_MK+G", os.path.join(results_dir, dataset, "prob_MULTIxMK+G"), "--prob-msa on")
+                "MULTI" + str(x) + "_MK+G", os.path.join(results_dir, dataset, "prob_MULTIxMK+G"), "--prob-msa on")
         
 
 columns = [
@@ -106,12 +100,12 @@ columns = [
         ]
 columns += ["alpha_" + model for model in gamma_models]
 df = pd.DataFrame(columns = columns)
-for i, dataset in enumerate(datasets):
+for i, row in metadata_df.iterrows():
+    dataset = row["Name"]
     print(dataset)
     df.at[i, "Name"] = dataset
-    msa_path = os.path.join("data/lexibench/character_matrices", dataset, "bin.phy")
     try:
-        align = util.safe_msa_read(msa_path)
+        align = util.safe_msa_read(row["bin.phy"])
     except:
         continue
     df.at[i, "num_sites"] = util.num_sites(align)
@@ -136,14 +130,15 @@ for i, dataset in enumerate(datasets):
     
 df = df.merge(metadata_df, on = "Name")
 
-if not os.path.isdir(os.path.join("results", "plots")):
-    os.makedirs(os.path.join("results", "plots"))
+if not os.path.isdir(os.path.join("data", "plots")):
+    os.makedirs(os.path.join("data", "plots"))
 
 scatterplot(df, "alpha_BIN+G", "alpha_prob_MULTIxMK+G")
 
 
 statistical_analysis(df, "alpha_BIN+G",
-            ["entropy_var",
+            [
+            #"entropy_var",
             "Languages",
             "num_sites",
             "Concepts",
@@ -153,8 +148,8 @@ statistical_analysis(df, "alpha_BIN+G",
             "inv_sites_emp",
             "inv_sites_estimate",
             "inv_sites_error",
-            "zero_freq_emp",
-            "bin_entropy",
+            #"zero_freq_emp",
+            #"bin_entropy",
             ])
 
 
@@ -162,17 +157,18 @@ statistical_analysis(df, "alpha_BIN+G",
 res_low = []
 res_high = []
 for i, row in df.iterrows():
-    r = [row["Name"], row["Languages"], row["cs_mean"], row["alpha_BIN+G"]]
+    r = [row["Name"], row["Languages"], row["cs_mean"], row["alpha_BIN+G"], row["difficult"]]
     if row["alpha_BIN+G"] > 90:
         res_high.append(r)
     else:
         res_low.append(r)
 
-headers = ["Name", "Languages", "cs_mean", "alpha"]
+headers = ["Name", "Languages", "cs_mean", "alpha", "difficult"]
 print("low alpha")
 print(tabulate(res_low, tablefmt="pipe", headers=headers))
 print("high alpha")
 print(tabulate(res_high, tablefmt="pipe", headers=headers))
 
 print(max(df[df["alpha_prob_MULTIxMK+G"].notnull()]["alpha_prob_MULTIxMK+G"]))
+print(min(df[df["alpha_BIN+G"] > 90]["alpha_BIN+G"]))
 print(max(df[df["alpha_BIN+G"] <= 90]["alpha_BIN+G"]))

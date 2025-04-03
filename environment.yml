@@ -4,10 +4,11 @@ channels:
   - anaconda
 dependencies:
   - tabulate
-  - biopython
   - pandas
   - numpy
   - pip:
-    -pylexibench
-    -pythialabelgenerator
+          -biopython
+          -ete3
+          #    -pylexibench
+          #    -pythialabelgenerator
 

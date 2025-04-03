@@ -5,8 +5,8 @@ import pandas as pd
 import raxmlng
 import iqtree
 
-results_dir = os.path.join("results", "raxml")
-iqtree_dir = os.path.join("results", "iqtree")
+results_dir = os.path.join("data", "raxml")
+iqtree_dir = os.path.join("data", "iqtree")
 
 
 metadata_df = pd.read_csv("data/lexibench/character_matrices/stats.tsv", sep = "\t")
@@ -48,8 +48,8 @@ print(max(errors))
 
 
 def plausible_tree_anaylsis(datasets, reference_model, high_alpha_only):
-    results_dir = os.path.join("results", "raxml")
-    iqtree_dir = os.path.join("results", "iqtree")
+    results_dir = os.path.join("data", "raxml")
+    iqtree_dir = os.path.join("data", "iqtree")
 
     plausible_count = 0
     identical_count = 0

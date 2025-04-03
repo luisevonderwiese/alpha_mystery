@@ -2,6 +2,9 @@ import os
 import util
 
 def label_command(msa_path, prefix):
+    if msa_path != msa_path:
+        print("MSA does not exist")
+        return
     command = "label"
     command += " -m " + msa_path
     command += " -i  bin/iqtree2"

@@ -1,8 +1,11 @@
 bin/iqtree2
 data/lexibench/character_matrices/*
+data/lexibench/character_matrices_compatible/*
 data/lexibench/download/*
 data/lexibench/lingpy_wordlists/*
-results/*
-results_old
+data/raxml/*
+data/iqtree/*
+data/plots/*
+data/difficulty_labels/*
 temp.*
 **/__pycache__/
